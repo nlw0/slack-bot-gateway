@@ -1,6 +1,6 @@
 import akka.actor.{ActorSystem, Props}
 import slack.rtm.SlackRtmClient
-import slackbot.{GatewayActor, SlashdotActor, SumActor}
+import slackbot.{GatewayActor, RSSReadingBot, SumActor}
 
 
 object SlackBotGateway extends App {
@@ -16,6 +16,10 @@ object SlackBotGateway extends App {
 
   gwActor ! client
 
-  val greetActor = system.actorOf(Props[SumActor], name = "sum")
-  val slashdotActor = system.actorOf(Props[SlashdotActor], name = "slashdot")
+  val sumActor = system.actorOf(Props[SumActor], name = "sum")
+  val slashdotURL = "http://rss.slashdot.org/Slashdot/slashdotMain"
+  val arxivURL = "http://export.arxiv.org/rss/cs.AI"
+  val slashdotActor = system.actorOf(Props(classOf[RSSReadingBot], slashdotURL, None), name = "slashdot")
+  val arxivActor = system.actorOf(Props(classOf[RSSReadingBot], arxivURL, Some("deep|autonomous driving".r)), name =
+    "arxiv")
 }
