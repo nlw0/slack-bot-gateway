@@ -9,15 +9,13 @@ import scala.concurrent.duration._
 import scala.io.Source
 import scala.xml.XML
 
-class RSSReadingBot(sourceURL: String, pollingPeriod: FiniteDuration, pattern: Option[scala.util.matching.Regex])
-  extends
-  Actor {
+class RSSReadingBot(sourceURL: String, pattern: Option[scala.util.matching.Regex]) extends Actor {
 
   import context.dispatcher
 
   val slackOutput = context.actorSelection("/user/slack-gateway/output")
 
-  context.system.scheduler.schedule(0.seconds, pollingPeriod, self, "tick")
+  context.system.scheduler.schedule(0.seconds, 10.seconds, self, "tick")
 
   // def lastDate:ZonedDateTime = ZonedDateTime.now()
   def zeroDate: ZonedDateTime = ZonedDateTime.parse("0000-12-25T22:30+02:00")
