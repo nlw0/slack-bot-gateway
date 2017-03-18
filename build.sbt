@@ -6,6 +6,8 @@ scalaVersion := "2.12.1"
 
 libraryDependencies += "com.github.gilbertw1" %% "slack-scala-client" % "0.2.1"
 
+libraryDependencies += "org.scala-lang.modules" %% "scala-xml" % "1.0.6"
+
 libraryDependencies ++= {
   val akkaV       = "2.4.17"
   val akkaHttpV   = "10.0.1"

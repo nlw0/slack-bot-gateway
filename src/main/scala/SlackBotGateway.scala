@@ -18,7 +18,7 @@ object SlackBotGateway extends App {
   val sumActor = system.actorOf(Props[SumActor], name = "sum")
   val slashdotURL = "http://rss.slashdot.org/Slashdot/slashdotMain"
   val arxivURL = "http://export.arxiv.org/rss/cs.AI"
-  val slashdotActor = system.actorOf(Props(classOf[RSSReadingBot], slashdotURL, 10.seconds, None), name = "slashdot")
+  val slashdotActor = system.actorOf(Props(classOf[RSSReadingBot], slashdotURL, 2.minutes, None), name = "slashdot")
   val arxivActor = system.actorOf(
     Props(classOf[RSSReadingBot], arxivURL, 30.minutes, Some("deep|autonomous driving".r)), name = "arxiv")
 }
