@@ -1,13 +1,13 @@
 package slackbot
 
-import akka.actor.Actor
-
-import scala.io.Source
-import java.io.{ByteArrayInputStream, File}
+import java.io.ByteArrayInputStream
 import java.nio.file.Paths
 
-import scala.sys.process._
+import akka.actor.Actor
+
 import scala.concurrent.duration._
+import scala.io.Source
+import scala.sys.process._
 import scala.util.matching.Regex
 
 class PluginsActor(pollingPeriod: FiniteDuration) extends Actor {
@@ -53,7 +53,4 @@ class PluginsActor(pollingPeriod: FiniteDuration) extends Actor {
   }
 
   case object UpdatePlugins
-
 }
-
-
