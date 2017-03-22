@@ -9,9 +9,8 @@ import scala.concurrent.duration._
 import scala.io.Source
 import scala.xml.XML
 
-class RSSReadingBot(sourceURL: String, pollingPeriod: FiniteDuration, pattern: Option[scala.util.matching.Regex])
-  extends
-  Actor {
+class RSSReadingBot(channelId: String, sourceURL: String, pollingPeriod: FiniteDuration,
+                    pattern: Option[scala.util.matching.Regex]) extends Actor {
 
   import context.dispatcher
 
@@ -44,7 +43,7 @@ class RSSReadingBot(sourceURL: String, pollingPeriod: FiniteDuration, pattern: O
         title = (x \ "title").text
         description = (x \ "description").text
         if date isAfter lastPublished
-        processedText = (title + " " + description).toLowerCase.split(" ").mkString
+        processedText = (title + " " + description).toLowerCase //.split(" ").mkString
         if pattern.forall(_.findFirstIn(processedText).isDefined)
       } yield (date, x)
 
@@ -53,7 +52,7 @@ class RSSReadingBot(sourceURL: String, pollingPeriod: FiniteDuration, pattern: O
       for ((date, x) <- newsToPublish) {
         val msg = s"${(x \ "title").text} ${(x \ "link").text}"
         println(msg)
-        slackOutput ! PostToChannel("C4L6FFMJQ", msg)
+        slackOutput ! PostToChannel(channelId, msg)
       }
 
       if (newsToPublish.nonEmpty) {

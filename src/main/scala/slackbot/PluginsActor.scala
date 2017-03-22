@@ -4,13 +4,14 @@ import java.io.ByteArrayInputStream
 import java.nio.file.Paths
 
 import akka.actor.Actor
+import slack.SlackUtil
 
 import scala.concurrent.duration._
 import scala.io.Source
 import scala.sys.process._
 import scala.util.matching.Regex
 
-class PluginsActor(pollingPeriod: FiniteDuration) extends Actor {
+class PluginsActor(pollingPeriod: FiniteDuration, botId: String) extends Actor {
 
   import context.dispatcher
 
@@ -26,7 +27,7 @@ class PluginsActor(pollingPeriod: FiniteDuration) extends Actor {
 
   def receive = pluginsConfig()
 
-  def pluginsConfig(lastConfigUpdate: Long = 0, routingTable: Seq[(Regex, String)] = Nil): Receive = {
+  def pluginsConfig(lastConfigUpdate: Long = 0, routingTable: Seq[BotTrigger] = Nil): Receive = {
     case UpdatePlugins =>
       if (pluginsConfigFile.lastModified > lastConfigUpdate) {
         println("Reading new plugins configuration")
@@ -34,23 +35,42 @@ class PluginsActor(pollingPeriod: FiniteDuration) extends Actor {
       }
 
     case m: slack.models.Message =>
-      for ((pat, prog) <- routingTable)
-        if (pat.findFirstIn(m.text).isDefined) {
+      for (BotTrigger(context, pat, script) <- routingTable)
+        if (pat.findFirstIn(m.text).isDefined
+            && (context != BotMentioned || SlackUtil.extractMentionedIds(m.text).contains(botId))
+            && (context != PrivateMessage || m.channel.head == 'D')
+        ) {
           val is = new ByteArrayInputStream(m.text.getBytes("UTF-8"))
-          val output = (prog #< is).lineStream.mkString("\n")
+          val output = (script #< is).lineStream.mkString("\n")
           slackOutput ! PostToChannel(m.channel, s"<@${m.user}> $output")
         }
   }
 
-  val configRow = raw"(^[^\t]+)\t([a-zA-Z0-9.]+)$$".r
+  val configRow = raw"(^[map])\t([^\t]+)\t([a-zA-Z0-9.]+)$$".r
 
-  def readNewConfig: List[(Regex, String)] = {
+  def readNewConfig: List[BotTrigger] = {
     Source.fromFile(pluginsConfigFile).getLines collect {
-      case configRow(reg, prog) => reg.r -> pluginsDirectory.resolve(prog).toFile
-    } map {
-      case (pattern, file) => (pattern, file.toString)
+      case configRow(msgType, reg, prog) =>
+        val scriptName = pluginsDirectory.resolve(prog).toFile.toString
+        msgType match {
+          case "m" => BotTrigger(BotMentioned, reg.r, scriptName)
+          case "a" => BotTrigger(AllMessages, reg.r, scriptName)
+          case "p" => BotTrigger(PrivateMessage, reg.r, scriptName)
+        }
     } toList
   }
 
   case object UpdatePlugins
+
 }
+
+sealed trait TriggerContext
+
+case object BotMentioned extends TriggerContext
+
+case object AllMessages extends TriggerContext
+
+case object PrivateMessage extends TriggerContext
+
+case class BotTrigger(context: TriggerContext, pattern: Regex, script: String)
+
