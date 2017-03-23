@@ -51,7 +51,7 @@ class RSSReadingBot(channelId: String, sourceURL: String, pollingPeriod: FiniteD
 
       for ((date, x) <- newsToPublish) {
         val msg = s"${(x \ "title").text} ${(x \ "link").text}"
-        println(msg)
+        println(s"RSS publishing $msg")
         slackOutput ! PostToChannel(channelId, msg)
       }
 
