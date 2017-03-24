@@ -33,19 +33,19 @@ class GatewayActor(client: SlackRtmClient) extends Actor {
   def gwState(registered_full: Set[Subscription] = Set()): Receive = {
     case message: slack.models.Message if message.user != client.state.self.id =>
       println(s"GW $message")
+      println(s"GW subscriptions\n$registered_full")
 
       if (message.text == "SCRAM") {
         client.sendMessage(message.channel, "Shutting down")
         context.system.terminate()
       }
 
-      for (Subscription(pattern, actor) <- registered_full) {
-        println(Subscription(pattern, actor))
+      for (sub: Subscription <- registered_full) {
+        println(sub)
 
         message.text match {
-          case pattern(_*) => actor ! message
-          case _ =>
-            println(s"non matched $message")
+          case sub.r(_*) => sub.who ! message
+          case _ => println(s"non matched $message")
         }
       }
     // val mentionedIds = SlackUtil.extractMentionedIds(message.text)

@@ -4,7 +4,7 @@ import akka.actor.Actor
 
 class SumActor extends Actor {
   val slackGw = context.actorSelection("/user/slack-gateway")
-  slackGw ! Subscription("sum [ \\d]*$".r, self)
+  slackGw ! Subscription("sum [ \\d]*$", self)
 
   def receive = {
     case m: slack.models.Message =>

@@ -6,6 +6,7 @@ import java.nio.file.Paths
 import akka.actor.Actor
 import slack.SlackUtil
 
+import scala.concurrent.Future
 import scala.concurrent.duration._
 import scala.io.Source
 import scala.sys.process._
@@ -18,7 +19,7 @@ class PluginsActor(pollingPeriod: FiniteDuration, botId: String) extends Actor {
   val slackOutput = context.actorSelection("/user/slack-gateway/output")
 
   val slackGw = context.actorSelection("/user/slack-gateway")
-  slackGw ! Subscription(".*".r, self)
+  slackGw ! Subscription(".*", self)
 
   val pluginsDirectory = Paths.get("plugins")
   val pluginsConfigFile = Paths.get("plugins.conf").toFile
@@ -41,7 +42,11 @@ class PluginsActor(pollingPeriod: FiniteDuration, botId: String) extends Actor {
             && (context != PrivateMessage || m.channel.head == 'D')
         ) {
           val is = new ByteArrayInputStream(m.text.getBytes("UTF-8"))
-          val output = (script #< is).lineStream.mkString("\n")
+
+          val processOutput = (script #< is).lineStream.iterator
+
+          val output = processOutput.mkString("\n")
+
           slackOutput ! PostToChannel(m.channel, s"<@${m.user}> $output")
         }
   }
