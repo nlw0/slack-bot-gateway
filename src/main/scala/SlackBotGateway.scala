@@ -31,7 +31,7 @@ object SlackBotGateway extends App {
       val period = period_.toInt.minutes
       val regex = if (pat == null) None else Some(pat.tail.r)
       for (cid <- channelId)
-        system.actorOf(Props(classOf[RSSReadingBot], cid, url, period, regex), name = "rss" + url.slice(7, 14))
+        system.actorOf(Props(classOf[RSSReadingBot], cid, url, period, regex))
 
     case _ =>
       println("RSS config not matched")
