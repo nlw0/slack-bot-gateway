@@ -35,7 +35,7 @@ class RSSReadingBot(channelId: String, sourceURL: String, pollingPeriod: FiniteD
 
       val sd = XML.load(sourceURL)
 
-      val defaultDate = findDateOptional(sd \\ "date").orElse(Some(zeroDate))
+      val defaultDate = findDateOptional(sd \\ "date").orElse(findDateOptional(sd \\ "pubDate").orElse(Some(zeroDate)))
 
       def newNews = for {
         x <- (sd \\ "item").take(3)
