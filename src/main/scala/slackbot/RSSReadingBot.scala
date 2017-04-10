@@ -2,6 +2,7 @@ package slackbot
 
 import java.io._
 import java.time.ZonedDateTime
+import java.time.format.DateTimeFormatter
 
 import akka.actor.Actor
 
@@ -35,7 +36,7 @@ class RSSReadingBot(channelId: String, sourceURL: String, pollingPeriod: FiniteD
 
       val sd = XML.load(sourceURL)
 
-      val defaultDate = findDateOptional(sd \\ "date").orElse(findDateOptional(sd \\ "pubDate").orElse(Some(zeroDate)))
+      val defaultDate = findDateOptional(sd \\ "date").orElse(findDateRFC1123Optional(sd \\ "pubDate")).orElse(Some(zeroDate))
 
       def newNews = for {
         x <- (sd \\ "item").take(3)
@@ -71,4 +72,7 @@ class RSSReadingBot(channelId: String, sourceURL: String, pollingPeriod: FiniteD
 
   def findDateOptional(ns: scala.xml.NodeSeq) =
     ns.headOption.map({ n: scala.xml.Node => ZonedDateTime.parse(n.text) })
+
+  def findDateRFC1123Optional(ns: scala.xml.NodeSeq) =
+    ns.headOption.map({ n: scala.xml.Node => ZonedDateTime.parse(n.text, DateTimeFormatter.RFC_1123_DATE_TIME) })
 }
