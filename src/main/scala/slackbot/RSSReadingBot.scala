@@ -40,7 +40,7 @@ class RSSReadingBot(channelId: String, sourceURL: String, pollingPeriod: FiniteD
 
       def newNews = for {
         x <- (sd \\ "item").take(3)
-        date <- findDateOptional(x \ "date").orElse(findDateRFC1123Optional(sd \ "pubDate")).orElse(defaultDate)
+        date <- findDateOptional(x \ "date").orElse(findDateRFC1123Optional(x \ "pubDate")).orElse(defaultDate)
         title = (x \ "title").text
         description = (x \ "description").text
         if date isAfter lastPublished
